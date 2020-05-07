@@ -10,69 +10,107 @@ sudo apt install compizconfig-settings-manager
 sudo apt-get install preload
 systemctl status preload
 
-# Increase threshold for virtual RAM useage (Threshold = (100-vm.swappiness)%)
-echo "vm.swappiness=10" | sudo tee /etc/sysctl.d/99-sysctl.conf 
-sudo sysctl vm.swappiness=10
+#install dependencies
+sudo apt-get update
+declare -a dependencies=("default-jre" # STM32 Cube
+						"build-essential" # Many
+						"checkinstall" # Python3.7
+						"libreadline-gplv2-dev libncursesw5-dev \
+						libssl-dev libsqlite3-dev tk-dev \
+						libgdbm-dev libc6-dev libbz2-dev \
+						libffi-dev zlib1g-dev" # Python3.7
+						"libusb-1.0-0-dev" # ST-Link
+						)
 
-# Allow startup applications to be seen in "Startup Applications"
-sudo sed -i "s/NoDisplay=true/NoDisplay=false/g" /etc/xdg/autostart/*.desktop
+for i in "${dependencies[@]}"
+do
+	echo "Installing dependency $i"
+	echo "Y\n" | sudo apt install "$i"
+done
 
+# Any other pre-processing
 # Install Sublime
 wget -qO - https://download.sublimetext.com/sublimehq-pub.gpg | sudo apt-key add -
 echo "deb https://download.sublimetext.com/ apt/stable/" | sudo tee /etc/apt/sources.list.d/sublime-text.list
+
+# Install LTSpice
+sudo dpkg --add-architecture i386 # Add the i386 architecture
+
+#Install packages
 sudo apt-get update
-sudo apt-get install sublime-text
+declare -a packages=("sublime-text"
+					"openocd"
+					"gdb-multiarch"
+					"wine-stable")
 
-# Temperature sensors
-sudo apt-get install lm-sensors
-sudo sensors-detect 
-# TODO type (y) a lot of times
-sensors
+for i in "${packages[@]}"
+do
+	echo "Installing package $i"
+	echo "Y\n" | sudo apt install "$i"
+done
 
-# Not sure if I want preload, but probably do
-sudo apt-get install preload
-systemctl status preload
+# Build Python 3.7
+# 1 - get dependencies
+# 2 - download Python 3.7
+cd /usr/src
+sudo wget https://www.python.org/ftp/python/3.7.4/Python-3.7.4.tgz
+sudo tar xzf Python-3.7.4.tgz
+
+# 3 – Compile Python Source
+cd Python-3.7.4
+sudo ./configure --enable-optimizations
+sudo make altinstall
+
+# Install st-link utilities
+git clone https://github.com/texane/stlink stlink
+cd stlink
+make
+#install binaries:
+sudo cp build/Debug/st-* /usr/local/bin
+#install udev rules
+sudo cp etc/udev/rules.d/49-stlinkv* /etc/udev/rules.d/
+#and restart udev
+sudo udevadm control --reload
+
+sudo apt-get update
+echo "Y\n" | sudo apt-get install wine-stable
+ltspice.analog.com/software/LTspiceXVII.exe
 
 # Increase threshold for virtual RAM useage (Threshold = (100-vm.swappiness)%)
 echo "vm.swappiness=10" | sudo tee /etc/sysctl.d/99-sysctl.conf 
 sudo sysctl vm.swappiness=10
 
 # Allow startup applications to be seen in "Startup Applications"
-sudo sed -i "s/NoDisplay=true/NoDisplay=false/g" /etc/xdg/autostart/*.desktop
+# sudo sed -i "s/NoDisplay=true/NoDisplay=false/g" /etc/xdg/autostart/*.desktop
 
 # Install Sublime
-wget -qO - https://download.sublimetext.com/sublimehq-pub.gpg | sudo apt-key add -
-echo "deb https://download.sublimetext.com/apt/stable/" | sudo tee /etc/apt/sources.list.d/sublime-text.list
-sudo apt-get update
-sudo apt-get install sublime-text
+# wget -qO - https://download.sublimetext.com/sublimehq-pub.gpg | sudo apt-key add -
+# echo "deb https://download.sublimetext.com/ apt/stable/" | sudo tee /etc/apt/sources.list.d/sublime-text.list
+# sudo apt-get update
+# echo "Y\n" | sudo apt-get install sublime-text
+
+# Temperature sensors
+#sudo apt-get install lm-sensors
+#sudo sensors-detect 
+# TODO type (y) a lot of times
+#sensors
+# get build-essentials
+
+# get openocd
+
+change id in stm32f1x.cfg
+
+# sudo apt install default-jre
+
 
 # To try out:
 dconf dump /org/compiz/profiles/unity/ > ccsm.cfg
 dconf load /org/compiz/profiles/unity/ < ccsm.cfg
 http://www.florian-diesch.de/software/unsettings/	
 
-#LTSpice
-sudo dpkg --add-architecture i386             # Add the i386 architecture
-sudo apt-get update
-sudo apt-get install wine wine-mono0.0.8 wine-gecko2.2
-
-unistall lubuntu
-
-copy over .bashrc
-sudo apt-get install git
-mkdir ~/UbuntuSetup
-git pull
+# unistall lubuntu
 
 # Get Python3.7
-sudo apt-get install build-essential checkinstall
-sudo apt-get install libreadline-gplv2-dev libncursesw5-dev libssl-dev \
-    libsqlite3-dev tk-dev libgdbm-dev libc6-dev libbz2-dev libffi-dev zlib1g-dev
-# Step 2 – Download Python 3.7
-cd /usr/src
-sudo wget https://www.python.org/ftp/python/3.7.4/Python-3.7.4.tgz
-sudo tar xzf Python-3.7.4.tgz
-
-# Step 3 – Compile Python Source
-cd Python-3.7.4
-sudo ./configure --enable-optimizations
-sudo make altinstall
+# sudo apt-get install build-essential checkinstall
+# sudo apt-get install libreadline-gplv2-dev libncursesw5-dev libssl-dev \
+#     libsqlite3-dev tk-dev libgdbm-dev libc6-dev libbz2-dev libffi-dev zlib1g-dev
