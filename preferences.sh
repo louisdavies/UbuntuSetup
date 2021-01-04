@@ -20,7 +20,11 @@ declare -a dependencies=("default-jre" # STM32 Cube
 						libgdbm-dev libc6-dev libbz2-dev \
 						libffi-dev zlib1g-dev" # Python3.7
 						"libusb-1.0-0-dev" # ST-Link
-						)
+						"clang bison flex libreadline-dev \
+                     				gawk tcl-dev libffi-dev git mercurial graphviz   \
+                     				xdot pkg-config libftdi-dev gperf \
+                     				libboost-program-options-dev autoconf libgmp-dev \
+                     				cmake")
 
 for i in "${dependencies[@]}"
 do
@@ -41,7 +45,8 @@ sudo apt-get update
 declare -a packages=("sublime-text"
 					"openocd"
 					"gdb-multiarch"
-					"wine-stable")
+					"wine-stable"
+					"gtkwave")
 
 for i in "${packages[@]}"
 do
@@ -80,37 +85,32 @@ ltspice.analog.com/software/LTspiceXVII.exe
 echo "vm.swappiness=10" | sudo tee /etc/sysctl.d/99-sysctl.conf 
 sudo sysctl vm.swappiness=10
 
-# Allow startup applications to be seen in "Startup Applications"
-# sudo sed -i "s/NoDisplay=true/NoDisplay=false/g" /etc/xdg/autostart/*.desktop
-
-# Install Sublime
-# wget -qO - https://download.sublimetext.com/sublimehq-pub.gpg | sudo apt-key add -
-# echo "deb https://download.sublimetext.com/ apt/stable/" | sudo tee /etc/apt/sources.list.d/sublime-text.list
-# sudo apt-get update
-# echo "Y\n" | sudo apt-get install sublime-text
-
-# Temperature sensors
-#sudo apt-get install lm-sensors
-#sudo sensors-detect 
-# TODO type (y) a lot of times
-#sensors
-# get build-essentials
-
 # get openocd
+#change id in stm32f1x.cfg
 
-change id in stm32f1x.cfg
+# Formal tool yosys
+git clone https://github.com/YosysHQ/yosys.git yosys
+cd yosys
+make -j$(nproc)
+sudo make install
 
-# sudo apt install default-jre
+# SymbiYosys
+git clone https://github.com/YosysHQ/SymbiYosys.git SymbiYosys
+cd SymbiYosys
+sudo make install
 
+# Yices2
+git clone https://github.com/SRI-CSL/yices2.git yices2
+cd yices2
+autoconf
+./configure
+make -j$(nproc)
+sudo make install
 
-# To try out:
-dconf dump /org/compiz/profiles/unity/ > ccsm.cfg
-dconf load /org/compiz/profiles/unity/ < ccsm.cfg
-http://www.florian-diesch.de/software/unsettings/	
-
-# unistall lubuntu
-
-# Get Python3.7
-# sudo apt-get install build-essential checkinstall
-# sudo apt-get install libreadline-gplv2-dev libncursesw5-dev libssl-dev \
-#     libsqlite3-dev tk-dev libgdbm-dev libc6-dev libbz2-dev libffi-dev zlib1g-dev
+# Z3
+git clone https://github.com/Z3Prover/z3.git z3
+cd z3
+python scripts/mk_make.py
+cd build
+make -j$(nproc)
+sudo make install
