@@ -46,7 +46,8 @@ declare -a packages=("sublime-text"
 					"openocd"
 					"gdb-multiarch"
 					"wine-stable"
-					"gtkwave")
+					"gtkwave"
+					"tree")
 
 for i in "${packages[@]}"
 do
